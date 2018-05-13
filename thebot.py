@@ -5,6 +5,8 @@ def init():
     import discord
     from discord.ext import commands
     import sys
+    import point_management
+    import events
 
     # Vars
     with open('token.txt','r') as file:
@@ -27,3 +29,6 @@ def init():
     bot.run(TOKEN)
 
     print("Hello Bot")
+
+if __name__ == '__main__':
+    print("Please run this bot using init.py.")
