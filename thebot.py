@@ -22,10 +22,6 @@ def init():
         inventory = '445373512471805953'
         controls = '445377007547580424'
 
-    # Format: [Username, Points, {Inventory Dict}]
-    playerlist = [ ["Nyhilo#0896", 10, {"Laser Beam":1, "Bowl of Peanuts":57}],
-                   ["mishka1980#4051", 1, {"Cookie":14}] ]
-
 
     # Bot Functions #
     @client.event
