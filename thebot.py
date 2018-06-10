@@ -19,9 +19,11 @@ def init():
         TOKEN = file.readline()
 
     # Bot should only have read/write permission to these channels
-    class CHANNEL:
-        inventory = '445373512471805953'
-        controls = '445377007547580424'
+    #TODO change this value to CONFIG, load them from file
+  CHANNEL={
+        "inventory": '445373512471805953'
+        "controls": '445377007547580424'
+        }
 
     playerlist = point_management.TurnList(filename="playerlist")
     playerlist.players = playerlist.load()
@@ -38,7 +40,7 @@ def init():
     @client.command()
     async def hello():
         client.msg = await client.say('Hello World! I am Nwn-bot. Pleased to meet you!')
-        await client.send_message(client.get_channel(CHANNEL.controls), 'I live!')
+        await client.send_message(client.get_channel(CHANNEL["controls"]), 'I live!')
 
     # Example Call and Response
     @client.command(pass_context=True)
@@ -51,6 +53,25 @@ def init():
     @client.command()
     async def roster():
         await client.say(playerlist.roster())
+
+    @client.command()
+    async def points(player, amount):
+        try:
+            amount = float(amount)
+            message = playerlist.givePoints(player, amount)
+            await client.say(message)
+        except ValueError:
+            await client.say("Usage: !points playername amount")
+
+    @client.command()
+    async def nc(player, amount):
+        try:
+            amount = int(amount)
+            message = playerlist.giveNc(player, amount)
+            await client.say(message)
+        except:
+            await client.say("Usage: !nc playername amount")
+
 
     client.run(TOKEN)
 

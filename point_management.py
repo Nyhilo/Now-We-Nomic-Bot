@@ -91,6 +91,7 @@ class TurnList(object):
 
     def addPlayer(self, playername):
         self.players.append(Player(name=playername))
+        self.save()
         return playername + " added to the roster."
 
     def removePlayer(self, playername):
@@ -99,6 +100,7 @@ class TurnList(object):
             return "No player by that name found."
         else:
             self.players.pop(player)
+            self.save()
             return playername + " removed from the game."
 
     def givePoints(self, playername, points):
@@ -107,9 +109,14 @@ class TurnList(object):
             return "No player by that name found."
         else:
             try:
-                self.players[player].points += float(points)
+                self.players[player].points += points
+                self.save()
+                if points >= 0:
+                    return "{:G} points given to {}".format(points, playername)
+                else:
+                    return "{:G} points taken from {}".format(points * -1, playername)
             except ValueError:
-                return "Please enter a number for points, e.g. `!points @playername#0000 8`"
+                return "Please enter a number for points, e.g. `!points playername 8`"
 
     def giveNc(self, playername, nc):
         player = self.findPlayerIndex(playername)
@@ -117,16 +124,21 @@ class TurnList(object):
             return "No player by that name found."
         else:
             try:
-                self.players[player].nc += float(nc)
+                self.players[player].nc += nc
+                self.save()
+                if nc >= 0:
+                    return str(nc) + "nc given to " + playername
+                else:
+                    return str(nc * -1) + "nc taken from " + playername
             except ValueError:
-                return "Please enter a number for nc, e.g. `!nc @playername#0000 8`"
+                return "Please enter a number for nc, e.g. `!nc playername 400`"
 
 
     def roster(self):
         roster = "```md\n  {:20}{:>6}{:>12}\n\n".format("Player","Score","nc")
         lead = ">"
         for player in self.players:
-            roster += lead + " {:20}{:>6g}{:>12}\n".format(
+            roster += lead + " {:20}{:>6G}{:>12}\n".format(
                 player.name.split('#')[0], player.points, player.nc)
 
             if lead == " ":
