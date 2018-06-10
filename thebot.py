@@ -1,5 +1,6 @@
 #
 
+
 def init():
     # Imports
     import discord
@@ -22,6 +23,8 @@ def init():
         inventory = '445373512471805953'
         controls = '445377007547580424'
 
+    playerlist = point_management.TurnList(filename="playerlist")
+    playerlist.players = playerlist.load()
 
     # Bot Functions #
     @client.event
@@ -44,6 +47,10 @@ def init():
         await client.send_message(ctx.message.channel, "Say hello")
         reply = await client.wait_for_message(author=ctx.message.author, content="hello")   # <- regex goes here
         await client.send_message(ctx.message.channel, "Yo.")
+
+    @client.command()
+    async def roster():
+        await client.say(playerlist.roster())
 
     client.run(TOKEN)
 

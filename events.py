@@ -1,4 +1,4 @@
 #
 
 def init():
-    print("Hello Events")
+    print("Loaded Events.py")

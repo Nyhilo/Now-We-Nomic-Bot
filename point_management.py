@@ -1,19 +1,21 @@
 #
+import random
 
 # Can you say, "Object Oriented"?
 class Item(object):
     def __init__(self, name, creator, cost=0, sellprice=0, amount=1, notes=""):
-        self.name = name
-        self.creator = creator
-        self.cost = cost
+        self.name      = name
+        self.creator   = creator
+        self.cost      = cost
         self.sellprice = sellprice
-        self.amount = amount
-        self.notes = notes
+        self.amount    = amount
+        self.notes     = notes
 
 class Player(object):
-    def __init__(self, name, points=0, inventory=[]):
-        self.name = name
-        self.points = points
+    def __init__(self, name, points=0, nc=2000, inventory=[]):
+        self.name      = name
+        self.points    = points
+        self.nc        = nc
         self.inventory = []
 
     def indexOf(self, item):
@@ -24,14 +26,14 @@ class Player(object):
             self.inventory[ self.indexOf(item) ].amount += number
         else:
             self.inventory.append(item)
-        return str(number) + " " item.name + " added!"
+        return str(number) + " " + item.name + " added!"
 
     def removeItem(self, item):
         if item in self.inventory:
             index = self.indexOf(item)
             if self.inventory[index].amount > 1:
                 self.inventory[index].amount -= 1
-                return "One " + item.name " removed!"
+                return "One " + item.name + " removed!"
             else:
                 self.inventory.pop(index)
             return item.name + " removed!"
@@ -39,85 +41,100 @@ class Player(object):
             return self.name + " doesn't own any " + item.name + "!"
 
 class PlayerDict(object):
-    def __init__(self):
-        self.players = {}
+    def __init__(self, players={}):
+        self.players = players
 
 
 class TurnList(object):
-    def __init__(self):
-        self.players = []
+    def __init__(self, filename="", players=[]):
+        self.players = players
+        self.filename = filename
+
+    def load(self):
+        output = []
+        try:
+            with open(self.filename, 'r') as file:
+                lines = file.readlines()
+                count = 0
+                for line in lines:
+                    count += 1
+                    line = line.split(',')
+                    if len(line) != 3:
+                        print("Skipping line " + str(count) + " during playerlist load.")
+                    else:
+                        try:
+                            output.append(Player(name=line[0],
+                                                 points=float(line[1]),
+                                                 nc=int(line[2]) ))
+                        except ValueError:
+                            print("Line " + str(count) + "malformattedin playerlist.")
+            return output
+
+        except FileNotFoundError:
+            file = open(self.filename, 'w')
+            file.close()
+            print("playerlist file created.")
+            return []
+
+    def save(self):
+        lines = ""
+        for player in self.players:
+            lines += player.name + "," + str(player.points) + "," + str(player.nc) + "\n"
+        with open(self.filename, 'w') as file:
+            file.write(lines)
+
+    def findPlayerIndex(self, playername):
+        for player in self.players:
+            if player.name == playername:
+                return self.players.index(player)
+        return None
+
+    def addPlayer(self, playername):
+        self.players.append(Player(name=playername))
+        return playername + " added to the roster."
+
+    def removePlayer(self, playername):
+        player = self.findPlayerIndex(playername)
+        if player == None:
+            return "No player by that name found."
+        else:
+            self.players.pop(player)
+            return playername + " removed from the game."
+
+    def givePoints(self, playername, points):
+        player = self.findPlayerIndex(playername)
+        if player == None:
+            return "No player by that name found."
+        else:
+            try:
+                self.players[player].points += float(points)
+            except ValueError:
+                return "Please enter a number for points, e.g. `!points @playername#0000 8`"
+
+    def giveNc(self, playername, nc):
+        player = self.findPlayerIndex(playername)
+        if player == None:
+            return "No player by that name found."
+        else:
+            try:
+                self.players[player].nc += float(nc)
+            except ValueError:
+                return "Please enter a number for nc, e.g. `!nc @playername#0000 8`"
 
 
+    def roster(self):
+        roster = "```md\n  {:20}{:>6}{:>12}\n\n".format("Player","Score","nc")
+        lead = ">"
+        for player in self.players:
+            roster += lead + " {:20}{:>6g}{:>12}\n".format(
+                player.name.split('#')[0], player.points, player.nc)
+
+            if lead == " ":
+                lead = ">"
+            else:
+                lead = " "
+        roster += "\n```"
+
+        return roster
 
 
-#load the playerlist, if it exists
-# def loadPlayerlist(filename):
-#     output = []
-#     # This one's a doozy. Mostly this is just checking the input file formatting
-#     try:
-#         with open(filename, 'r') as file:
-#             lines = file.readlines()
-
-#             # Initialize the first user
-#             firstname = lines.pop(0).strip()
-#             output.append({"Name":firstname.strip()})
-#             output[0]["Items"] = {}
-
-#             index = 0
-#             lineNumber = 1    # The first name was line 1
-
-#             # Iterate through the rest of the lines.
-#             # New players will create a new entry in the output list
-#             # Additional items will be added to the items dictionary for the current index
-#             for line in lines:
-#                 lineNumber += 1
-
-#                 # Additional item
-#                 if line.startswith("    ") or line.startswith("\t"):
-#                     item = line.strip().split(';')
-#                     if len(item) == 1:
-#                         print("No amount listed for " + item[0] + " on line " + lineNumber +
-#                             ". Defaulting to 1.")
-#                         output[index]["Items"][item[0]] = {}
-#                         output[index]["Items"][item[0]]["Amount"] = 0
-
-#                     if len(item) >= 2:
-#                         output[index]["Items"][item[0]] = {}
-#                         try:
-#                             output[index]["Items"][item[0]]["Amount"] = float(item[1])
-#                         except ValueError:  # item[1] not a number
-#                             print("Amount for " + item[0] + " on line " + lineNumber +
-#                                 " listed as " + item[1] + ". Defaulting to 0.")
-#                             output[index]["Items"][item[0]]["Amount"] = 0
-
-#                     if len(item) > 2:   # Line contains additional details
-#                         output[index]["Items"][item[0]]["Notes"] = item[2]
-
-#                 # Blank line
-#                 elif line.strip() == "":
-#                     pass
-
-#                 # Next player
-#                 else:   # If the line is a new name
-#                     index += 1
-#                     output.append({"Name":line.strip()})
-#                     output[index]["Items"] = {}
-
-#         return output
-
-#     except FileNotFoundError:
-#         print("File: " + filename + " not found, creating file.")
-#         with open(filename, 'w+') as file:
-#             pass    # Just create the file, it's empty
-#         return []
-
-# # Format: [{Name:Username, Items:{Points:#, Item:{Amount:$, Notes:""}, etc...}}, {etc...}]
-# playerlist = loadPlayerlist("playerlist")
-
-
-
-# def init():
-#     print("Hello Points")
-
-# if __name__ == '__main__':
-#     print(playerlist[1]["Name"])
